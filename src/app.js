@@ -9,6 +9,51 @@ let currentService = null;
 let currentHospitalId = null;
 let map = null;
 
+// Navigation stack for back button handling
+let navigationStack = ['homePage'];
+
+// ============================================
+// CAPACITOR BACK BUTTON HANDLING
+// ============================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadInitialData();
+    setupFormHandler();
+    setupBackButtonHandler();
+});
+
+function setupBackButtonHandler() {
+    // Handle Android hardware/gesture back button
+    if (window.Capacitor && window.Capacitor.Plugins.App) {
+        window.Capacitor.Plugins.App.addListener('backButton', ({ canGoBack }) => {
+            handleBackButton();
+        });
+    }
+}
+
+function handleBackButton() {
+    // Remove current page from stack
+    if (navigationStack.length > 1) {
+        navigationStack.pop();
+        const previousPage = navigationStack[navigationStack.length - 1];
+        
+        // Navigate to previous page without adding to stack
+        showPageDirect(previousPage);
+        
+        return true; // Handled the back button
+    } else {
+        // On home page, exit app
+        if (window.Capacitor && window.Capacitor.Plugins.App) {
+            window.Capacitor.Plugins.App.exitApp();
+        }
+        return false;
+    }
+}
+
+// ============================================
+// GEOLOCATION
+// ============================================
+
 const getCurrentPosition = async () => {
     try {
         // Try Capacitor Geolocation first (for mobile app)
@@ -65,11 +110,6 @@ const getCurrentPosition = async () => {
 // INITIALIZATION
 // ============================================
 
-document.addEventListener('DOMContentLoaded', () => {
-    loadInitialData();
-    setupFormHandler();
-});
-
 async function loadInitialData() {
     try {
         hospitals = await apiRequest('/hospitals');
@@ -99,21 +139,21 @@ function populateDropdowns() {
     const typeSelect = document.getElementById('serviceTypeSelect');
     typeSelect.innerHTML = '<option value="">All Services</option>';
     serviceTypes.forEach(t => {
-        typeSelect.innerHTML += `<option value="${t.id}"> ${t.name}</option>`;
+        typeSelect.innerHTML += `<option value="${t.id}">${t.name}</option>`;
     });
 
     // Add service page hospital select
     const addHospitalSelect = document.getElementById('addHospitalSelect');
     addHospitalSelect.innerHTML = '<option value="">Select hospital...</option>';
     hospitals.forEach(h => {
-        addHospitalSelect.innerHTML += `<option value=${h.id}>${h.name}</option>`;
+        addHospitalSelect.innerHTML += `<option value="${h.id}">${h.name}</option>`;
     });
 
     // Add service page service type select
     const addTypeSelect = document.getElementById('addServiceTypeSelect');
     addTypeSelect.innerHTML = '<option value="">Select service type...</option>';
     serviceTypes.forEach(t => {
-        addTypeSelect.innerHTML += `<option value=${t.id}>${t.name}</option>`;
+        addTypeSelect.innerHTML += `<option value="${t.id}">${t.name}</option>`;
     });
 }
 
@@ -132,16 +172,15 @@ async function searchServices() {
 
     currentHospitalId = hospitalId;
     let endpoint = `/services/filter`;
-    if (hospitalId) endpoint += `?hospital_id=${hospitalId}`
+    if (hospitalId) endpoint += `?hospital_id=${hospitalId}`;
     if (serviceType) endpoint += `&service_type_id=${serviceType}`;
 
     try {
         services = await apiRequest(endpoint);
         
-        console.log(services)
         const hospital = hospitals.find(h => h.id === hospitalId);
-        // document.getElementById('servicesTitle').textContent = hospital.name;
-        document.getElementById('servicesCount').textContent = `${services.length} services available`;
+        document.getElementById('servicesTitle').textContent = hospital ? hospital.name : 'Services';
+        document.getElementById('servicesCount').textContent = `${services.length} service${services.length !== 1 ? 's' : ''} available`;
         
         displayServices();
         showPage('servicesPage');
@@ -160,10 +199,10 @@ function displayServices() {
     
     if (services.length === 0) {
         list.innerHTML = `
-            <div class="card" style="text-align: center; padding: 40px;">
-                <div style="font-size: 48px; margin-bottom: 16px;">😔</div>
-                <h3 style="margin-bottom: 8px;">No Services Found</h3>
-                <p style="color: #6b7280;">No services are currently available for this selection.</p>
+            <div class="card empty-state">
+                <div class="empty-icon">🔍</div>
+                <h3 class="empty-title">No Services Found</h3>
+                <p class="empty-text">No services are currently available for this selection. Try a different hospital or service type.</p>
             </div>
         `;
         return;
@@ -173,18 +212,28 @@ function displayServices() {
         <div class="service-card" onclick="showServiceDetail('${s.id}')">
             <div class="service-title">${s.name || 'Service'}</div>
 
-            <div style="font-size: 14px; color: #6b7280; margin-bottom: 12px;">
-                ${s.description || ''}
+            ${s.description ? `
+                <div class="service-description">
+                    ${s.description}
+                </div>
+            ` : ''}
+
+            <div class="service-info">
+                <span>🏥</span>
+                <span>${s.hospital_name || 'Hospital'}</span>
+            </div>
+            <div class="service-info">
+                <span>⏰</span>
+                <span>${s.timings || 'Timings not specified'}</span>
+            </div>
+            <div class="service-info">
+                <span>📞</span>
+                <span>${s.contact || 'Contact not available'}</span>
             </div>
 
-            <div class="service-info">🏥 ${s.hospital_name || 'Hospital'}</div>
-            <div class="service-info">⏰ ${s.timings || 'Timings not specified'}</div>
-            <div class="service-info">📞 ${s.contact || 'Contact not available'}</div>
-
-            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
-                <span style="color: #2563eb; font-size: 13px; font-weight: 500;">
-                    Tap for details →
-                </span>
+            <div class="tap-hint">
+                <span>View Details</span>
+                <span>→</span>
             </div>
         </div>
     `).join('');
@@ -197,43 +246,47 @@ function displayServices() {
 async function showServiceDetail(serviceId) {
     try {
         currentService = await apiRequest(`/services/${serviceId}`);
-        console.log(currentService)
         
         document.getElementById('detailTitle').textContent = currentService.name;
         
         document.getElementById('detailContent').innerHTML = `
-            <div style="margin-bottom: 12px;">
-                <div style="font-size: 12px; color: #6b7280; text-transform: uppercase; margin-bottom: 4px;">Provider</div>
-                <div>${currentService.provider}</div>
+            <div class="detail-section">
+                <div class="detail-label">Provider</div>
+                <div class="detail-value">👤 ${currentService.provider}</div>
             </div>
-            <div style="margin-bottom: 12px;">
-                <div style="font-size: 12px; color: #6b7280; text-transform: uppercase; margin-bottom: 4px;">Description</div>
-                <div>${currentService.description}</div>
+            
+            <div class="detail-section">
+                <div class="detail-label">Description</div>
+                <div class="detail-value">${currentService.description}</div>
             </div>
-            <div style="margin-bottom: 12px;">
-                <div style="font-size: 12px; color: #6b7280; text-transform: uppercase; margin-bottom: 4px;">Timings</div>
-                <div>🕐 ${currentService.timings}</div>
+            
+            <div class="detail-section">
+                <div class="detail-label">Timings</div>
+                <div class="detail-value">🕐 ${currentService.timings}</div>
             </div>
-            <div style="margin-bottom: 12px;">
-                <div style="font-size: 12px; color: #6b7280; text-transform: uppercase; margin-bottom: 4px;">Contact</div>
-                <div>📞 ${currentService.contact}</div>
+            
+            <div class="detail-section">
+                <div class="detail-label">Contact</div>
+                <div class="detail-value">📞 ${currentService.contact}</div>
             </div>
+            
             ${currentService.eligibility ? `
-                <div style="margin-bottom: 12px;">
-                    <div style="font-size: 12px; color: #6b7280; text-transform: uppercase; margin-bottom: 4px;">Eligibility</div>
-                    <div>${currentService.eligibility}</div>
+                <div class="detail-section">
+                    <div class="detail-label">Eligibility</div>
+                    <div class="detail-value">${currentService.eligibility}</div>
                 </div>
             ` : ''}
+            
             ${currentService.required_docs ? `
-                <div style="margin-bottom: 12px;">
-                    <div style="font-size: 12px; color: #6b7280; text-transform: uppercase; margin-bottom: 4px;">Required Documents</div>
-                    <div>${currentService.required_docs}</div>
+                <div class="detail-section">
+                    <div class="detail-label">Required Documents</div>
+                    <div class="detail-value">${currentService.required_docs}</div>
                 </div>
             ` : ''}
         `;
 
         document.getElementById('callBtn').onclick = () => {
-            window.location.href = `tel:${currentService.provider_contact}`;
+            window.location.href = `tel:${currentService.provider_contact || currentService.contact}`;
         };
 
         document.getElementById('directionsBtn').onclick = () => {
@@ -264,7 +317,7 @@ function initMap(lat, lng) {
     }).addTo(map);
     
     L.marker([lat, lng]).addTo(map)
-        .bindPopup(currentService.provider_name)
+        .bindPopup(currentService.provider || currentService.name)
         .openPopup();
 }
 
@@ -273,10 +326,17 @@ function initMap(lat, lng) {
 // ============================================
 
 async function useLocation() {
-    let {latitude, longitude } = await getCurrentPosition()
+    try {
+        let { latitude, longitude } = await getCurrentPosition();
 
-    document.getElementById('latitude').value = latitude;
-    document.getElementById('longitude').value = longitude;
+        document.getElementById('latitude').value = latitude;
+        document.getElementById('longitude').value = longitude;
+        
+        alert(`Location captured: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+    } catch (error) {
+        console.error('Error getting location:', error);
+        alert('Failed to get location. Using default location (Kozhikode).');
+    }
 }
 
 // ============================================
@@ -308,13 +368,12 @@ function setupFormHandler() {
                 body: JSON.stringify(data)
             });
 
-            alert('Service added successfully!');
+            alert('✅ Service added successfully! Thank you for helping your community.');
             document.getElementById('addServiceForm').reset();
             showHome();
         } catch (error) {
             console.error('Error:', error);
-            alert(error)
-            // alert('Failed to add service');
+            alert('Failed to add service: ' + error);
         }
     };
 }
@@ -324,30 +383,21 @@ function setupFormHandler() {
 // ============================================
 
 async function findNearby() {
-    if ('geolocation' in navigator) {
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                try {
-                    services = await apiRequest(
-                        `/services/nearby?lat=${position.coords.latitude}&lng=${position.coords.longitude}&radius=5`
-                    );
-                    
-                    document.getElementById('servicesTitle').textContent = 'Nearby Services';
-                    document.getElementById('servicesCount').textContent = `${services.length} services found`;
-                    
-                    displayServices();
-                    showPage('servicesPage');
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('Failed to find nearby services');
-                }
-            },
-            () => {
-                alert('Failed to get location. Please enable location services.');
-            }
+    try {
+        const position = await getCurrentPosition();
+        
+        services = await apiRequest(
+            `/services/nearby?lat=${position.latitude}&lng=${position.longitude}&radius=5`
         );
-    } else {
-        alert('Geolocation not supported by your device');
+        
+        document.getElementById('servicesTitle').textContent = '📍 Nearby Services';
+        document.getElementById('servicesCount').textContent = `${services.length} service${services.length !== 1 ? 's' : ''} found within 5km`;
+        
+        displayServices();
+        showPage('servicesPage');
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to find nearby services. Please enable location services.');
     }
 }
 
@@ -356,19 +406,40 @@ async function findNearby() {
 // ============================================
 
 function showPage(pageId) {
+    // Hide all pages
     document.getElementById('homePage').classList.add('hidden');
     document.getElementById('servicesPage').classList.add('hidden');
     document.getElementById('detailPage').classList.add('hidden');
     document.getElementById('addServicePage').classList.add('hidden');
+    
+    // Show requested page
     document.getElementById(pageId).classList.remove('hidden');
+    
+    // Add to navigation stack
+    navigationStack.push(pageId);
+}
+
+function showPageDirect(pageId) {
+    // Hide all pages
+    document.getElementById('homePage').classList.add('hidden');
+    document.getElementById('servicesPage').classList.add('hidden');
+    document.getElementById('detailPage').classList.add('hidden');
+    document.getElementById('addServicePage').classList.add('hidden');
+    
+    // Show requested page
+    document.getElementById(pageId).classList.remove('hidden');
+    
+    // Don't add to navigation stack (used for back navigation)
 }
 
 function showHome() {
+    // Reset navigation stack when going home
+    navigationStack = [];
     showPage('homePage');
 }
 
 function showServices() {
-    showPage('servicesPage');
+    showPageDirect('servicesPage');
 }
 
 function showAddService() {
