@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SevaNear - Find Services</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .header {
+            background: #2563eb;
+            color: white;
+            padding: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .container {
+            padding: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        select, input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        button:active {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: #10b981;
+        }
+
+        .btn-secondary:active {
+            background: #059669;
+        }
+
+        .btn-gray {
+            background: #6b7280;
+        }
+
+        .btn-gray:active {
+            background: #4b5563;
+        }
+
+        .service-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+
+        .service-card:active {
+            background: #f9fafb;
+        }
+
+        .service-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #111827;
+        }
+
+        .service-info {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 4px 0;
+        }
+
+        #map {
+            height: 300px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .back-btn {
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 12px;
+            padding: 8px 0;
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .quick-btn {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+
+        .quick-btn:active {
+            background: #f9fafb;
+        }
+
+        .quick-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .quick-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #111827;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border-left: 4px solid #2563eb;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <!-- HOME PAGE -->
+    <div id="homePage">
+        <div class="header">
+            <h1>SevaNear</h1>
+            <p>Find free & low-cost services</p>
+        </div>
+        
+        <div class="container">
+            <!-- <div class="info-box">
+                💡 Using dummy data. Connect to your backend API by updating API_URL in config.
+            </div> -->
+
+            <div class="card">
+                <h2 style="font-size: 18px; margin-bottom: 16px;">Find Services Near You</h2>
+                
+                <div class="form-group">
+                    <label>Select Hospital</label>
+                    <select id="hospitalSelect">
+                        <option value="">Choose a hospital...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Service Type </label>
+                    <select id="serviceTypeSelect">
+                        <option value="">All Services</option>
+                    </select>
+                </div>
+
+                <button onclick="searchServices()">Find Services</button>
+            </div>
+
+            <div class="quick-actions">
+                <div class="quick-btn" onclick="showAddService()">
+                    <div class="quick-icon">➕</div>
+                    <div class="quick-title">Add Service</div>
+                    <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Provider</div>
+                </div>
+                <div class="quick-btn" onclick="findNearby()">
+                    <div class="quick-icon">📍</div>
+                    <div class="quick-title">Nearby</div>
+                    <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Use location</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SERVICES LIST PAGE -->
+    <div id="servicesPage" class="hidden">
+        <div class="header">
+            <a class="back-btn" onclick="showHome()">← Back</a>
+            <h1 id="servicesTitle">Services</h1>
+            <p id="servicesCount">Loading...</p>
+        </div>
+        
+        <div class="container">
+            <div id="servicesList"></div>
+        </div>
+    </div>
+
+    <!-- SERVICE DETAIL PAGE -->
+    <div id="detailPage" class="hidden">
+        <div class="header">
+            <a class="back-btn" onclick="showServices()">← Back</a>
+            <h1 id="detailTitle">Service Details</h1>
+        </div>
+        
+        <div class="container">
+            <div id="map"></div>
+            
+            <div class="card">
+                <h3 style="margin-bottom: 16px;">Service Information</h3>
+                <div id="detailContent"></div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-secondary" id="callBtn">📞 Call</button>
+                <button id="directionsBtn">🗺️ Directions</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD SERVICE PAGE -->
+    <div id="addServicePage" class="hidden">
+        <div class="header">
+            <a class="back-btn" onclick="showHome()">← Back</a>
+            <h1>Add New Service</h1>
+            <p>Help others in need</p>
+        </div>
+        
+        <div class="container">
+            <div class="card">
+                <form id="addServiceForm">
+                    <div class="form-group">
+                        <label>Hospital *</label>
+                        <select id="addHospitalSelect" required>
+                            <option value="">Select hospital...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Service Type *</label>
+                        <select id="addServiceTypeSelect" required>
+                            <option value="">Select service type...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Service Name *</label>
+                        <input type="text" id="name" placeholder="e.g. Free Lunch Service" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Provider Name *</label>
+                        <input type="text" id="providerName" placeholder="Your name or organization" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Contact Number *</label>
+                        <input type="tel" id="providerContact" placeholder="+91 1234567890" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description *</label>
+                        <textarea id="description" placeholder="Brief description of the service" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Timings *</label>
+                        <input type="text" id="timings" placeholder="e.g., 9:00 AM - 5:00 PM" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Eligibility Criteria</label>
+                        <textarea id="eligibility" placeholder="Who can access this service?"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Required Documents</label>
+                        <textarea id="requiredDocs" placeholder="What documents are needed?"></textarea>
+                    </div>
+
+                    <button type="button" class="btn-gray" onclick="useLocation()" style="margin-bottom: 16px;">
+                        📍 Use My Location
+                    </button>
+                    <input type="hidden" id="latitude" value="11.2588">
+                    <input type="hidden" id="longitude" value="75.7804">
+
+                    <button type="submit">Add Service</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- App Config -->
+    <script src="config.js"></script>
+    
+    <!-- App Logic -->
+    <script src="app.js"></script>
+</body>
+</html>

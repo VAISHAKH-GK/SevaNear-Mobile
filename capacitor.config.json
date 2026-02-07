@@ -1,0 +1,8 @@
+{
+  "appId": "com.sevanear.app",
+  "appName": "SevaNear",
+  "webDir": "src/",
+  "server": {
+    "androidScheme": "https"
+  }
+}

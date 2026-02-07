@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SevaNear</string>
+    <string name="title_activity_main">SevaNear</string>
+    <string name="package_name">com.sevanear.app</string>
+    <string name="custom_url_scheme">com.sevanear.app</string>
+</resources>

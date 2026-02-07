@@ -1,0 +1,21 @@
+{
+  "name": "sevanear",
+  "version": "1.0.0",
+  "description": "SevaNear - Community Services App",
+  "scripts": {
+    "setup": "npm install",
+    "android": "npx cap add android && npx cap sync && npx cap open android",
+    "ios": "npx cap add ios && npx cap sync && npx cap open ios",
+    "sync": "npx cap sync",
+    "update": "npx cap update"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^5.5.1"
+  },
+  "dependencies": {
+    "@capacitor/android": "^5.5.1",
+    "@capacitor/core": "^5.5.1",
+    "@capacitor/geolocation": "^5.0.8",
+    "@capacitor/ios": "^5.5.1"
+  }
+}
