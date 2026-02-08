@@ -2,6 +2,8 @@
 
 This is repository contains source code for the SevaNear mobile application. SevaNear that helps patients and bystanders discover free services near hospitals in Kozhikode.
 
+[Backend](https://github.com/VAISHAKH-GK/SevaNear) of this project.
+
 ## Key Features
 
 - Free food
