@@ -9,9 +9,6 @@ let currentService = null;
 let currentHospitalId = null;
 let map = null;
 
-// Navigation stack for back button handling
-let navigationStack = ['homePage'];
-
 // ============================================
 // CAPACITOR BACK BUTTON HANDLING
 // ============================================
@@ -23,30 +20,56 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function setupBackButtonHandler() {
-    // Handle Android hardware/gesture back button
-    if (window.Capacitor && window.Capacitor.Plugins.App) {
-        window.Capacitor.Plugins.App.addListener('backButton', ({ canGoBack }) => {
-            handleBackButton();
+    // Handle Android hardware/gesture back button with Capacitor
+    if (window.Capacitor) {
+        document.addEventListener('ionBackButton', (ev) => {
+            ev.detail.register(10, (processNextHandler) => {
+                const handled = handleBackButton();
+                if (!handled) {
+                    processNextHandler();
+                }
+            });
         });
+        
+        // Capacitor App plugin listener
+        if (window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+            window.Capacitor.Plugins.App.addListener('backButton', (data) => {
+                handleBackButton();
+            });
+        }
     }
 }
 
+function getCurrentPage() {
+    if (!document.getElementById('homePage').classList.contains('hidden')) return 'homePage';
+    if (!document.getElementById('servicesPage').classList.contains('hidden')) return 'servicesPage';
+    if (!document.getElementById('detailPage').classList.contains('hidden')) return 'detailPage';
+    if (!document.getElementById('addServicePage').classList.contains('hidden')) return 'addServicePage';
+    return 'homePage';
+}
+
 function handleBackButton() {
-    // Remove current page from stack
-    if (navigationStack.length > 1) {
-        navigationStack.pop();
-        const previousPage = navigationStack[navigationStack.length - 1];
-        
-        // Navigate to previous page without adding to stack
-        showPageDirect(previousPage);
-        
-        return true; // Handled the back button
-    } else {
-        // On home page, exit app
-        if (window.Capacitor && window.Capacitor.Plugins.App) {
-            window.Capacitor.Plugins.App.exitApp();
-        }
-        return false;
+    const currentPage = getCurrentPage();
+    
+    console.log('Back button pressed. Current page:', currentPage);
+    
+    switch (currentPage) {
+        case 'detailPage':
+            showPageDirect('servicesPage');
+            return true;
+            
+        case 'servicesPage':
+        case 'addServicePage':
+            showPageDirect('homePage');
+            return true;
+            
+        case 'homePage':
+        default:
+            // On home page, exit app
+            if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+                window.Capacitor.Plugins.App.exitApp();
+            }
+            return false;
     }
 }
 
@@ -415,8 +438,8 @@ function showPage(pageId) {
     // Show requested page
     document.getElementById(pageId).classList.remove('hidden');
     
-    // Add to navigation stack
-    navigationStack.push(pageId);
+    // Scroll to top
+    window.scrollTo(0, 0);
 }
 
 function showPageDirect(pageId) {
@@ -429,12 +452,11 @@ function showPageDirect(pageId) {
     // Show requested page
     document.getElementById(pageId).classList.remove('hidden');
     
-    // Don't add to navigation stack (used for back navigation)
+    // Scroll to top
+    window.scrollTo(0, 0);
 }
 
 function showHome() {
-    // Reset navigation stack when going home
-    navigationStack = [];
     showPage('homePage');
 }
 

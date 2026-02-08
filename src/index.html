@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SevaNear - Find Services</title>
-    
+
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        crossorigin="anonymous" />
     <style>
         * {
             margin: 0;
@@ -15,326 +17,263 @@
             box-sizing: border-box;
         }
 
+        #callBtn {
+            margin-bottom: 20px;
+        }
+
+        .map-hero {
+            height: 260px;
+            width: 100%;
+            border-radius: 0 0 24px 24px;
+            overflow: hidden;
+            background: #0b0b0f;
+        }
+
+        /* ===== ROOT COLORS ===== */
+        :root {
+            --bg: #000000;
+            --card: #0b0b0f;
+            --card-border: #1f2933;
+            --text: #f9fafb;
+            --muted: #9ca3af;
+            --accent: #22d3ee;
+            --accent-2: #8b5cf6;
+            --danger: #ef4444;
+        }
+
+        /* ===== BASE ===== */
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
         }
 
+        /* ===== HEADER ===== */
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: linear-gradient(135deg, #020617, #020617);
             padding: 20px 16px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-bottom: 1px solid var(--card-border);
             position: sticky;
             top: 0;
             z-index: 100;
+            height: 100px;
         }
 
         .header h1 {
-            font-size: 28px;
-            margin-bottom: 4px;
+            font-size: 26px;
             font-weight: 700;
             letter-spacing: -0.5px;
         }
 
         .header p {
             font-size: 14px;
-            opacity: 0.95;
-            font-weight: 300;
+            color: var(--muted);
         }
 
+        /* ===== LAYOUT ===== */
         .container {
             padding: 16px;
             max-width: 600px;
             margin: 0 auto;
-            padding-bottom: 32px;
         }
 
+        /* ===== CARDS ===== */
         .card {
-            background: white;
+            background: var(--card);
             border-radius: 16px;
-            padding: 20px;
+            padding: 18px;
             margin-bottom: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            border: 1px solid rgba(255,255,255,0.8);
+            border: 1px solid var(--card-border);
         }
 
         .card h2 {
-            font-size: 20px;
-            margin-bottom: 20px;
-            color: #1f2937;
-            font-weight: 700;
-        }
-
-        .form-group {
+            font-size: 18px;
             margin-bottom: 18px;
         }
 
-        label {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #374151;
+        /* ===== FORMS ===== */
+        .form-group {
+            margin-bottom: 16px;
         }
 
-        select, input, textarea {
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--muted);
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        select,
+        input,
+        textarea {
             width: 100%;
             padding: 14px;
-            border: 2px solid #e5e7eb;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.2s;
-            background: #f9fafb;
+            background: #020617;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            font-size: 15px;
+            color: var(--text);
         }
 
-        select:focus, input:focus, textarea:focus {
+        select:focus,
+        input:focus,
+        textarea:focus {
             outline: none;
-            border-color: #667eea;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: var(--accent);
         }
 
-        textarea {
-            min-height: 100px;
-            resize: vertical;
-            font-family: inherit;
-        }
-
+        /* ===== BUTTONS ===== */
         button {
             width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            padding: 15px;
+            border-radius: 14px;
             border: none;
-            border-radius: 12px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-
-        button:active {
-            transform: scale(0.98);
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+            color: #020617;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
         }
 
         .btn-secondary {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #020617;
         }
 
         .btn-gray {
-            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
-            box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+            background: #111827;
+            color: var(--text);
+            border: 1px solid var(--card-border);
         }
 
+        /* ===== SERVICE CARD ===== */
         .service-card {
-            background: white;
+            background: var(--card);
             border-radius: 16px;
-            padding: 18px;
+            padding: 16px;
             margin-bottom: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid #f3f4f6;
+            border: 1px solid var(--card-border);
+            transition: transform 0.15s ease;
         }
 
         .service-card:active {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            transform: scale(0.98);
         }
 
         .service-title {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 700;
-            margin-bottom: 10px;
-            color: #111827;
-        }
-
-        .service-info {
-            font-size: 14px;
-            color: #6b7280;
-            margin: 6px 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            margin-bottom: 6px;
         }
 
         .service-description {
             font-size: 14px;
-            color: #4b5563;
-            margin-bottom: 12px;
-            line-height: 1.5;
+            color: var(--muted);
+            margin-bottom: 10px;
         }
 
-        #map {
-            height: 300px;
-            border-radius: 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        .back-btn {
-            display: inline-flex;
+        .service-info {
+            font-size: 13px;
+            color: var(--muted);
+            display: flex;
             align-items: center;
             gap: 8px;
-            color: white;
-            text-decoration: none;
-            font-size: 16px;
-            margin-bottom: 12px;
-            padding: 8px 0;
-            cursor: pointer;
-            font-weight: 500;
+            margin: 6px 0;
         }
 
-        .hidden {
-            display: none !important;
-        }
-
+        /* ===== QUICK ACTIONS ===== */
         .quick-actions {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            /* grid-template-columns: 1fr 1fr; */
             gap: 12px;
-            margin-top: 20px;
+            margin-top: 16px;
         }
 
         .quick-btn {
-            background: white;
-            padding: 24px 16px;
-            border-radius: 16px;
+            background: var(--card);
+            border-radius: 18px;
+            padding: 22px 16px;
             text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid rgba(255,255,255,0.8);
-        }
-
-        .quick-btn:active {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+            border: 1px solid var(--card-border);
         }
 
         .quick-icon {
-            font-size: 40px;
-            margin-bottom: 12px;
+            font-size: 36px;
+            margin-bottom: 10px;
         }
 
         .quick-title {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
-            color: #111827;
-            margin-bottom: 4px;
         }
 
         .quick-subtitle {
             font-size: 12px;
-            color: #6b7280;
-            margin-top: 4px;
+            color: var(--muted);
         }
 
-        .action-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .info-box {
-            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-            border-left: 4px solid #3b82f6;
-            padding: 16px;
-            border-radius: 12px;
+        /* ===== MAP ===== */
+        #map {
+            height: 280px;
+            border-radius: 16px;
+            border: 1px solid var(--card-border);
             margin-bottom: 16px;
-            font-size: 14px;
-            color: #1e40af;
-            line-height: 1.6;
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-        }
-
-        .empty-icon {
-            font-size: 64px;
-            margin-bottom: 16px;
-            opacity: 0.5;
-        }
-
-        .empty-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #1f2937;
-        }
-
-        .empty-text {
-            color: #6b7280;
-            font-size: 15px;
-        }
-
-        .detail-section {
-            margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #f3f4f6;
-        }
-
-        .detail-section:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
+        /* ===== DETAIL PAGE ===== */
         .detail-label {
-            font-size: 12px;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-            font-weight: 600;
+            font-size: 11px;
+            color: var(--muted);
+            letter-spacing: 0.08em;
+            margin-bottom: 6px;
         }
 
         .detail-value {
             font-size: 15px;
-            color: #1f2937;
             line-height: 1.6;
         }
 
-        .service-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-top: 8px;
+        /* ===== MISC ===== */
+        .back-btn {
+            color: var(--accent);
+            font-size: 15px;
+            text-decoration: none;
         }
 
-        .tap-hint {
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid #e5e7eb;
-            color: #667eea;
-            font-size: 13px;
-            font-weight: 600;
+        .hidden {
+            display: none;
+        }
+
+        .header-solid {
+            background: #000;
+            padding: 16px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: 12px;
         }
 
-        @media (max-width: 640px) {
-            .container {
-                padding: 12px;
-            }
-            
-            .card {
-                padding: 16px;
-            }
+        .header-title {
+            color: #fff;
+            font-size: 20px;
+            font-weight: 700;
         }
+
+        .icon-back {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: #111;
+            color: white;
+            border: 1px solid #222;
+            font-size: 22px;
+        }
+
     </style>
+
 </head>
+
 <body>
     <!-- HOME PAGE -->
     <div id="homePage">
@@ -342,11 +281,11 @@
             <h1>🏥 SevaNear</h1>
             <p>Find free & low-cost services near you</p>
         </div>
-        
+
         <div class="container">
             <div class="card">
                 <h2>Find Services</h2>
-                
+
                 <div class="form-group">
                     <label>🏥 Select Hospital</label>
                     <select id="hospitalSelect">
@@ -370,11 +309,11 @@
                     <div class="quick-title">Add Service</div>
                     <div class="quick-subtitle">Help your community</div>
                 </div>
-                <div class="quick-btn" onclick="findNearby()">
+                <!-- <div class="quick-btn" onclick="findNearby()">
                     <div class="quick-icon">📍</div>
                     <div class="quick-title">Find Nearby</div>
                     <div class="quick-subtitle">Use my location</div>
-                </div>
+                </div> -->
             </div>
         </div>
     </div>
@@ -382,11 +321,13 @@
     <!-- SERVICES LIST PAGE -->
     <div id="servicesPage" class="hidden">
         <div class="header">
-            <a class="back-btn" onclick="handleBackButton()">← Back</a>
+            <a class="back-btn" onclick="handleBackButton()">
+                <i class="fa fa-arrow-left" aria-hidden="true"></i>
+            </a>
             <h1 id="servicesTitle">Services</h1>
             <p id="servicesCount">Loading...</p>
         </div>
-        
+
         <div class="container">
             <div id="servicesList"></div>
         </div>
@@ -394,14 +335,16 @@
 
     <!-- SERVICE DETAIL PAGE -->
     <div id="detailPage" class="hidden">
-        <div class="header">
-            <a class="back-btn" onclick="handleBackButton()">← Back</a>
-            <h1 id="detailTitle">Service Details</h1>
+        <div class="header header-solid">
+            <a class="back-btn" onclick="handleBackButton()">
+                <i class="fa fa-arrow-left" aria-hidden="true"></i>
+            </a>
+            <h1 id="detailTitle" class="header-title">Service Details</h1>
         </div>
-        
+
         <div class="container">
-            <div id="map"></div>
-            
+            <div id="map" class="map-hero"></div>
+
             <div class="card">
                 <div id="detailContent"></div>
             </div>
@@ -416,11 +359,14 @@
     <!-- ADD SERVICE PAGE -->
     <div id="addServicePage" class="hidden">
         <div class="header">
-            <a class="back-btn" onclick="handleBackButton()">← Back</a>
+            <a class="back-btn" onclick="handleBackButton()">
+                <i class="fa fa-arrow-left" aria-hidden="true"></i>
+            </a>
+
             <h1>Add New Service</h1>
             <p>Help others find support</p>
         </div>
-        
+
         <div class="container">
             <div class="card">
                 <form id="addServiceForm">
@@ -442,7 +388,7 @@
                         <label>📝 Service Name *</label>
                         <input type="text" id="name" placeholder="e.g. Free Lunch Service" required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>👤 Provider Name *</label>
                         <input type="text" id="providerName" placeholder="Your name or organization" required>
@@ -487,11 +433,12 @@
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
+
     <!-- App Config -->
     <script src="config.js"></script>
-    
+
     <!-- App Logic -->
     <script src="app.js"></script>
 </body>
+
 </html>
