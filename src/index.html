@@ -7,7 +7,11 @@
     <title>SevaNear - Find Services</title>
 
     <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         crossorigin="anonymous" />
     <style>
@@ -227,12 +231,15 @@
             font-size: 11px;
             color: var(--muted);
             letter-spacing: 0.08em;
-            margin-bottom: 6px;
         }
 
         .detail-value {
             font-size: 15px;
             line-height: 1.6;
+        }
+
+        .detail-section {
+            margin-top: 10px;
         }
 
         /* ===== MISC ===== */
@@ -422,6 +429,17 @@
                     <button type="button" class="btn-gray" onclick="useLocation()" style="margin-bottom: 16px;">
                         📍 Use My Current Location
                     </button>
+                    <button type="button" class="btn-gray" onclick="openMapPicker()" style="margin-bottom: 16px;">
+                        🗺️ Pick Location from Map
+                    </button>
+
+                    <div id="mapPickerContainer" class="hidden" style="margin-top: 12px;">
+                        <div id="mapPicker" style="height: 300px; border-radius: 12px;"></div>
+
+                        <button type="button" onclick="confirmMapLocation()" style="margin-top: 12px; margin-bottom: 12px;">
+                            ✅ Use Selected Location
+                        </button>
+                    </div>
                     <input type="hidden" id="latitude" value="11.2588">
                     <input type="hidden" id="longitude" value="75.7804">
 

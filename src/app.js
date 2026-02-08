@@ -274,6 +274,10 @@ async function showServiceDetail(serviceId) {
         
         document.getElementById('detailContent').innerHTML = `
             <div class="detail-section">
+                <div class="detail-label">Hospital</div>
+                <div class="detail-value"> 🏥${currentService.hospital_name}</div>
+            </div>
+            <div class="detail-section">
                 <div class="detail-label">Provider</div>
                 <div class="detail-value">👤 ${currentService.provider}</div>
             </div>
@@ -466,4 +470,60 @@ function showServices() {
 
 function showAddService() {
     showPage('addServicePage');
+}
+
+let mapPicker;
+let mapMarker;
+let selectedLatLng = null;
+
+function openMapPicker() {
+    const container = document.getElementById('mapPickerContainer');
+    container.classList.remove('hidden');
+
+    // Initialize map only once
+    if (!mapPicker) {
+        const lat = parseFloat(document.getElementById('latitude').value) || 11.2588;
+        const lng = parseFloat(document.getElementById('longitude').value) || 75.7804;
+
+        mapPicker = L.map('mapPicker').setView([lat, lng], 14);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(mapPicker);
+
+        mapMarker = L.marker([lat, lng], { draggable: true }).addTo(mapPicker);
+
+        selectedLatLng = { lat, lng };
+
+        // Click on map
+        mapPicker.on('click', (e) => {
+            mapMarker.setLatLng(e.latlng);
+            selectedLatLng = e.latlng;
+        });
+
+        // Drag marker
+        mapMarker.on('dragend', (e) => {
+            selectedLatLng = e.target.getLatLng();
+        });
+    }
+
+    setTimeout(() => {
+        mapPicker.invalidateSize();
+    }, 200);
+}
+
+function confirmMapLocation() {
+    if (!selectedLatLng) {
+        alert('Please select a location on the map');
+        return;
+    }
+
+    document.getElementById('latitude').value = selectedLatLng.lat;
+    document.getElementById('longitude').value = selectedLatLng.lng;
+
+    alert(
+        `📍 Location selected:\nLat: ${selectedLatLng.lat.toFixed(4)}\nLng: ${selectedLatLng.lng.toFixed(4)}`
+    );
+
+    document.getElementById('mapPickerContainer').classList.add('hidden');
 }
